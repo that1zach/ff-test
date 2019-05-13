@@ -1,29 +1,4 @@
-const validate = (val, rules, connectedValue) => {
-  // Ensures that multiple validated inputs must stay valid through all checks
-  let isValid = true;
-
-  for (let rule in rules) {
-    switch (rule) {
-      case "isEmail":
-        isValid = isValid && isEmail(val);
-        break;
-
-      case "minLength":
-        isValid = isValid && minLength(val, rules[rule]);
-        break;
-
-      case "equalTo":
-        isValid = isValid && equalTo(val, connectedValue[rule]);
-        break;
-
-      default:
-        isValid = true;
-        break;
-    }
-  }
-
-  return isValid;
-};
+import validators from "./validators";
 
 export const validateControl = (key, value, passedState) => {
   let connectedValue = {};
@@ -32,8 +7,8 @@ export const validateControl = (key, value, passedState) => {
   // All controls without an 'equalTo' validation
   if (!("equalTo" in controls[key])) {
     const isValid = validate(
-      value,
       controls[key].validationRules,
+      value,
       connectedValue
     );
     controls = {
@@ -83,8 +58,8 @@ export const validateControl = (key, value, passedState) => {
     };
 
     const isValid = validate(
-      controlValue,
       controls[control].validationRules,
+      controlValue,
       connectedValue
     );
 
@@ -108,7 +83,7 @@ export const validateControl = (key, value, passedState) => {
   // VALIDATE THE WHOLE FORM
   const isValid = Object.keys(controls).every(c => controls[c].isValid);
 
-  const newState = {
+  return {
     form: {
       ...passedState.form,
       controls: {
@@ -120,24 +95,35 @@ export const validateControl = (key, value, passedState) => {
       isValid
     }
   };
-
-  return newState;
 };
 
-const isEmail = val => {
+const validate = (rules, val, connectedValue) => {
   /*
-	The email validator could also reach out to a domain validation service as a secondary validation
+	Ensures that multiple validated inputs must stay valid through all checks
+	This switch statement would definitely be trashed with a shorter version in
+	its place.
 	 */
+  let isValid = true;
 
-  return /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/.test(
-    val
-  );
-};
+  for (let rule in rules) {
+    switch (rule) {
+      case "isEmail":
+        isValid = isValid && validators.isEmail(val);
+        break;
 
-const minLength = (val, minLength) => {
-  return val.length >= minLength;
-};
+      case "minLength":
+        isValid = isValid && validators.minLength(val, rules[rule]);
+        break;
 
-const equalTo = (val, checkValue) => {
-  return val === checkValue;
+      case "equalTo":
+        isValid = isValid && validators.equalTo(val, connectedValue[rule]);
+        break;
+
+      default:
+        isValid = true;
+        break;
+    }
+  }
+
+  return isValid;
 };
